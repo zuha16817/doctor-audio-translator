@@ -1,0 +1,32 @@
+# Environment and Secret Files
+.env
+.env.local
+*.env
+
+# Python & Virtual Environments
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+ENV/
+build/
+dist/
+*.egg-info/
+
+# Ephemeral Temp Audio Directory (Section 10)
+backend/temp/*
+!backend/temp/.gitkeep
+
+# Pytest and Test Caches
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Operating System & IDE Files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
