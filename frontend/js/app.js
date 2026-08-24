@@ -304,14 +304,13 @@ document.addEventListener('DOMContentLoaded', () => {
       transTextarea.className = 'result-textarea rtl-arabic';
     }
 
-    // Confidence Badge (Phase 2 Enhancement)
+    // Confidence Badge
     if (result.confidenceScore !== undefined && result.confidenceScore !== null) {
       confidenceBadge.style.display = 'inline-block';
       const score = result.confidenceScore;
-      confidenceBadge.textContent = `🟢 ${score}% Confidence`;
+      confidenceBadge.textContent = `${score}% Confidence`;
       if (score < 80) {
         confidenceBadge.className = 'px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30';
-        confidenceBadge.textContent = `🟡 ${score}% Confidence`;
       } else {
         confidenceBadge.className = 'px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30';
       }
@@ -468,15 +467,15 @@ document.addEventListener('DOMContentLoaded', () => {
       card.innerHTML = `
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-1.5">
-            <span class="text-xs font-bold text-sky-400 uppercase">${item.sourceLanguage} ➔ ${item.targetLanguage}</span>
+            <span class="text-xs font-bold text-sky-400 uppercase">${item.sourceLanguage} → ${item.targetLanguage}</span>
             <span class="text-[10px] text-slate-500">• ${timeStr}</span>
           </div>
-          <span class="text-[11px] font-semibold text-emerald-400">🟢 ${item.confidenceScore || 98}%</span>
+          <span class="text-[11px] font-semibold text-emerald-400">${item.confidenceScore || 98}%</span>
         </div>
         <p class="text-xs text-slate-200 line-clamp-2 italic">${item.translation || item.transcription}</p>
         <div class="flex items-center justify-between pt-1 text-[11px] text-slate-400">
           <span>${item.durationSeconds}s duration</span>
-          <span class="text-sky-400 font-semibold hover:underline">Click to restore ➔</span>
+          <span class="text-sky-400 font-semibold hover:underline">Restore →</span>
         </div>
       `;
 

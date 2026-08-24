@@ -1,94 +1,112 @@
-# 🩺 Doctor’s Audio Transcription & Translation System
+# Doctor Audio Transcription & Translation
 
-An enterprise-grade, clinical-focused web application designed to transcribe doctor and patient speech in **Arabic** and **Urdu**, and translate it seamlessly into **English** and other target languages.
+A web-based audio transcription and translation application designed for healthcare environments. The system transcribes spoken Arabic and Urdu audio into text and translates the results into English and other target languages.
 
----
+## Overview
 
-## 🌟 Key Features
+The application provides a single-page workflow:
+1. **Audio Input**: Upload audio files (`.mp3`, `.wav`, `.m4a`, `.webm`, `.ogg`, `.opus`) or record live speech via the browser microphone with a real-time waveform visualizer.
+2. **Speech Recognition**: Speech-to-text powered by `faster-whisper` (CTranslate2) with native Arabic and Urdu acoustic handling, anti-hallucination controls, and confidence scoring.
+3. **Translation**: Multi-engine translation pipeline with language code normalization and fallback handling.
+4. **Clinical Summary**: Automatic extraction of key symptoms and consultation synopsis.
+5. **Output Display**: Dynamic right-to-left (RTL) rendering for Arabic and Urdu, alongside LTR formatted translations, export tools (.txt download, JSON history), and text-to-speech playback.
 
-* **Multi-Format Audio Upload**: Supports `.mp3`, `.wav`, `.m4a`, `.webm`, `.ogg`, and `.opus` up to 50 MB with strict server-side validation.
-* **In-Browser Voice Recording**: High-fidelity recording using the browser's `MediaRecorder` API accompanied by a real-time **Web Audio API** frequency waveform visualizer on HTML5 Canvas.
-* **Dual-Engine Decoupled Architecture**:
-  * **Speech-to-Text (STT)**: Decoupled via `ISpeechToTextService` using high-speed, offline `faster-whisper` (CTranslate2) with native Arabic & Urdu vocabulary, anti-hallucination suppression, and cloud Whisper fallback.
-  * **Translation**: Decoupled via `ITranslationService` with a multi-engine fallback chain (`MyMemory` $\to$ `GoogleTranslator` $\to$ Auto-Detect $\to$ graceful sanitization).
-* **Authentic Multilingual & RTL Typography**: Dynamic Right-to-Left (`dir="rtl"`) layout and custom Google Fonts (`Cairo` for Arabic, `Noto Nastaliq Urdu` for Urdu, `Plus Jakarta Sans` for UI).
-* **Clinical Audio Privacy & Security**: Zero permanent retention of audio. Audio is saved to temporary storage with randomized UUIDs and deterministically deleted immediately after processing.
-* **🟢 Real-Time Confidence Scores**: Speech recognition token probability calculation displayed directly on the UI badge.
-* **🧠 AI-Generated Clinical Summaries**: Automatically generates medical synopses and extracts key clinical symptoms (*Fever, Cough, Headache, Pain, Dyspnea*).
-* **📜 Consultation & Translation History Drawer**: Interactive slide-over drawer allowing doctors to review, restore past sessions, export history as `.json`, or clear history.
-* **Clinical Productivity Tools**: One-click copy-to-clipboard, `.txt` transcript downloads, text-to-speech audio pronunciation, and one-click sample loaders for testing.
-
----
-
-## 🏛️ System Architecture
+## Architecture
 
 ```mermaid
 graph TD
-    User["👨‍⚕️ Doctor / Patient"] -->|Upload or Mic Stream| UI["🖥️ Single Page Interface"]
-    UI -->|REST API multipart/form-data| Backend["⚙️ FastAPI Backend (/api/audio/transcribe-translate)"]
+    User[Doctor / Patient] -->|Upload or Mic Stream| UI[Web Interface]
+    UI -->|POST /api/audio/transcribe-translate| Backend[FastAPI Backend]
     
-    subgraph Security & Pipeline
-        Backend --> Validate["🔒 Validation (Extension, MIME, Size)"]
-        Validate --> Ephemeral["💾 Ephemeral Storage (UUID temp file)"]
-        Ephemeral --> Preprocess["⚙️ FFmpeg Normalization (16kHz PCM)"]
-        Preprocess --> STT["🎙️ ISpeechToTextService (Faster-Whisper)"]
-        STT --> Trans["📝 Arabic/Urdu Source Text + Confidence Score"]
-        Trans --> Translate["🌐 ITranslationService (Multi-Engine)"]
-        Translate --> Summary["🧠 AI Clinical Summary Generator"]
-        Summary --> Result["📄 English / Target Translation + Synopsis"]
-        Result --> Cleanup["🧹 Deterministic Cleanup (File Deleted)"]
+    subgraph Processing Pipeline
+        Backend --> Validator[Audio Validator]
+        Validator --> TempStore[Ephemeral Temp Storage]
+        TempStore --> Preprocess[FFmpeg 16kHz PCM Conversion]
+        Preprocess --> STT[Speech-to-Text Service]
+        STT --> Trans[Source Text + Confidence]
+        Trans --> Translator[Translation Service]
+        Translator --> Summarizer[Clinical Summarizer]
+        Summarizer --> Result[Translation + Summary]
+        Result --> Cleanup[Temp File Deletion]
     end
     
-    Cleanup --> Response["📦 JSON Response"]
+    Cleanup --> Response[JSON Response]
     Response --> UI
 ```
 
----
+## Tech Stack
 
-## 🚀 Quick Start Guide
+- **Backend**: Python 3.11, FastAPI, Uvicorn, Pydantic v2
+- **Speech Recognition**: Faster-Whisper (CTranslate2)
+- **Audio Processing**: FFmpeg
+- **Frontend**: HTML5, CSS3 (Tailwind CSS baseline + custom styles), Vanilla JavaScript (Web Audio API, MediaRecorder)
+- **Typography**: Google Fonts (Cairo for Arabic, Noto Nastaliq Urdu for Urdu, Plus Jakarta Sans for UI)
+- **Testing**: Pytest, Pytest-Asyncio, HTTPX
+
+## Getting Started
 
 ### Prerequisites
-* Python 3.10+
-* `ffmpeg` installed on the host machine (for audio processing)
 
-### 1. Install Dependencies
-```bash
-pip install -r requirements.txt
-```
+- Python 3.10 or higher
+- `ffmpeg` installed and available in your system PATH
 
-### 2. Configure Environment (Optional)
-Copy `.env.example` to `.env` if you wish to customize configuration:
-```bash
-cp .env.example .env
-```
+### Installation
 
-### 3. Run the Server
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/zuha16817/doctor-audio-translator.git
+   cd doctor-audio-translator
+   ```
+
+2. Create and activate a virtual environment (optional but recommended):
+   ```bash
+   python -m venv venv
+   # On Windows:
+   venv\Scripts\activate
+   # On macOS/Linux:
+   source venv/bin/activate
+   ```
+
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. (Optional) Configure environment variables:
+   ```bash
+   cp .env.example .env
+   ```
+
+### Running the Application
+
+Start the server:
 ```bash
 python backend/main.py
 ```
-Or with Uvicorn directly:
+
+Or using Uvicorn directly:
 ```bash
 uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-### 4. Open in Browser
-Visit **`http://localhost:8000`** to access the application.
+Open your browser and navigate to `http://localhost:8000`.
 
----
-
-## 📡 REST API Reference
+## API Reference
 
 ### `POST /api/audio/transcribe-translate`
-Processes audio file and returns transcription, translation, confidence score, and AI clinical summary.
 
-#### Request (`multipart/form-data`)
-| Parameter | Type | Required | Description |
-| :--- | :--- | :--- | :--- |
-| `audioFile` | Binary File | Yes | Audio file (`.mp3`, `.wav`, `.m4a`, `.webm`, `.ogg`, `.opus`) |
-| `sourceLanguage` | String | No | `auto` (default), `ar` (Arabic), or `ur` (Urdu) |
-| `targetLanguage` | String | Yes | `en` (default), `ar`, `ur`, `fr`, `es`, `de` |
+Submits an audio recording or file for transcription and translation.
 
-#### Success Response (`200 OK`)
+#### Request Form Data (`multipart/form-data`)
+
+| Parameter | Type | Required | Default | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `audioFile` | Binary File | Yes | — | Audio file (.mp3, .wav, .m4a, .webm, .ogg, .opus) |
+| `sourceLanguage` | String | No | `auto` | `auto`, `ar` (Arabic), or `ur` (Urdu) |
+| `targetLanguage` | String | Yes | `en` | Target language code (`en`, `ar`, `ur`, `fr`, `es`, `de`) |
+
+#### Sample Response (`200 OK`)
+
 ```json
 {
   "success": true,
@@ -103,25 +121,53 @@ Processes audio file and returns transcription, translation, confidence score, a
 }
 ```
 
-#### Error Response (`400 Bad Request` or `500 Internal Error`)
-```json
-{
-  "success": false,
-  "errorCode": "UNSUPPORTED_FORMAT",
-  "message": "Unsupported audio format '.pdf'. Supported formats: .mp3, .wav, .m4a, .webm, .ogg, .opus"
-}
-```
+### `GET /api/health`
 
----
+Returns service health status and active configuration.
 
-## 🧪 Running Automated Tests
+### `GET /api/languages`
 
-Run the full test suite with Pytest:
+Returns supported source and target languages.
+
+## Security & Privacy
+
+- **Ephemeral Audio Storage**: Audio files are temporarily saved to disk using randomized UUIDs for processing and immediately deleted inside a `finally` block, ensuring no patient audio is retained.
+- **Credential Protection**: All API configurations and keys remain server-side and are never sent to the client.
+- **Input Validation**: Strict backend checks on file MIME types, extensions, and file sizes (max 50 MB).
+
+## Running Tests
+
+Run the test suite with Pytest:
 ```bash
 pytest backend/tests/ -v
 ```
 
----
+## Project Structure
 
-## 📄 License
-Developed for clinical workflow automation and medical language accessibility.
+```
+doctor-audio-translator/
+├── backend/
+│   ├── configuration/      # Settings and environment configuration
+│   ├── controllers/        # REST API route handlers
+│   ├── models/             # Pydantic data schemas
+│   ├── services/
+│   │   ├── audio/          # Validation and temp file lifecycle
+│   │   ├── speech/         # STT interface, Whisper implementation, summarizer
+│   │   └── translation/    # Translation interface and provider adapters
+│   ├── temp/               # Ephemeral storage directory
+│   ├── tests/              # Unit and integration test suite
+│   └── main.py             # FastAPI entry point
+├── frontend/
+│   ├── css/                # Custom styles, RTL rules, typography
+│   ├── js/                 # Web Audio recorder, visualizer, UI controllers
+│   ├── samples/            # Test audio samples
+│   └── index.html          # Single-page interface
+├── requirements.txt
+├── .env.example
+├── .gitignore
+└── README.md
+```
+
+## License
+
+MIT
